@@ -159,8 +159,7 @@ class OpenAlexDiscoverer(AbstractDiscoverer):
             if e.response.status_code == 404:
                 # 404 is expected for very new DOIs - OpenAlex hasn't indexed them yet
                 logger.debug(
-                    f"DOI {doi} not yet indexed in OpenAlex "
-                    "(404 - normal for recent publications)"
+                    f"DOI {doi} not yet indexed in OpenAlex (404 - normal for recent publications)"
                 )
             else:
                 logger.warning(

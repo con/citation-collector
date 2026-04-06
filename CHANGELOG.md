@@ -1,3 +1,30 @@
+# 0.2.4 (Mon Feb 02 2026)
+
+#### 🐛 Bug Fix
+
+- **CRITICAL: Fix bioRxiv/Cloudflare 403 errors** - Remove custom User-Agent that triggered bot detection [#3](https://github.com/con/citations-collector/pull/3) ([@yarikoptic](https://github.com/yarikoptic))
+- Improve integration tests to detect User-Agent/Cloudflare issues - Tests now fail on 403 instead of skipping ([@yarikoptic](https://github.com/yarikoptic))
+- Improve robustness: increase API timeouts, better error handling - Event Data APIs now 60s timeout, smarter 404/403 handling ([@yarikoptic](https://github.com/yarikoptic))
+- Fix ruff formatting in openalex.py ([@yarikoptic](https://github.com/yarikoptic))
+
+#### 🚀 Enhancement
+
+- Add 5 dataset-specific citation relationship types (Phase 1) - Supports, Describes, Derives, Cites, References ([@yarikoptic](https://github.com/yarikoptic))
+- Add ontology alignment to established vocabularies (Phase 1) - Maps to CiTO, DataCite, BIBO ontologies ([@yarikoptic](https://github.com/yarikoptic))
+- Support multiple citation relationships per citation ([@yarikoptic](https://github.com/yarikoptic))
+
+#### 🏠 Internal
+
+- Add comprehensive ontology alignment documentation ([@yarikoptic](https://github.com/yarikoptic))
+- Add comprehensive tooling and integration plan ([@yarikoptic](https://github.com/yarikoptic))
+- Restore multi-source validation after schema regeneration ([@yarikoptic](https://github.com/yarikoptic))
+
+#### Authors: 1
+
+- Yaroslav Halchenko ([@yarikoptic](https://github.com/yarikoptic))
+
+---
+
 # 0.2.3 (Fri Jan 31 2026)
 
 #### 🚀 Enhancement
