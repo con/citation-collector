@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Any, Literal
 
 from .base import LLMBackend
 from .ollama_backend import OllamaBackend
@@ -14,7 +14,7 @@ BackendType = Literal["openrouter", "ollama", "openai", "dartmouth"]
 
 def create_backend(
     backend_type: BackendType,
-    **kwargs,
+    **kwargs: Any,
 ) -> LLMBackend:
     """Factory for creating LLM backends.
 

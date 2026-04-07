@@ -21,14 +21,14 @@ def create_citation_record_with_validators(base_class: type) -> type:
         Subclass with validators added
     """
 
-    class CitationRecordWithValidators(base_class):  # type: ignore[misc,valid-type]
+    class CitationRecordWithValidators(base_class):  # type: ignore[misc,valid-type,has-type]
         """CitationRecord with custom validation logic."""
 
         @model_validator(mode="after")
         def populate_and_validate(self) -> CitationRecordWithValidators:
             """Auto-populate lists and validate coherence."""
             # Citation relationships handling
-            if self.citation_relationship and not self.citation_relationships:
+            if self.citation_relationship and not self.citation_relationships:  # type: ignore[has-type]
                 # Auto-populate list from singular
                 self.citation_relationships = [self.citation_relationship]
             elif (
@@ -44,7 +44,7 @@ def create_citation_record_with_validators(base_class: type) -> type:
                 )
 
             # Citation sources handling
-            if self.citation_source and not self.citation_sources:
+            if self.citation_source and not self.citation_sources:  # type: ignore[has-type]
                 # Auto-populate list from singular
                 self.citation_sources = [self.citation_source]
             elif (
@@ -71,7 +71,7 @@ def create_citation_record_with_validators(base_class: type) -> type:
 
                     if not isinstance(dates_dict, dict):
                         raise ValueError(
-                            f"discovered_dates must be a JSON object, " f"got: {type(dates_dict)}"
+                            f"discovered_dates must be a JSON object, got: {type(dates_dict)}"
                         )
                 else:
                     dates_dict = self.discovered_dates or {}

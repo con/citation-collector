@@ -78,12 +78,12 @@ def build_classification_prompt(
     Returns:
         Formatted prompt string
     """
-    context_text = "\n\n".join(f"[Context {i+1}] {ctx}" for i, ctx in enumerate(contexts))
+    context_text = "\n\n".join(f"[Context {i + 1}] {ctx}" for i, ctx in enumerate(contexts))
 
     return f"""
-Paper: {paper_metadata.get('title', 'Unknown')}
-Journal: {paper_metadata.get('journal', 'Unknown')}
-Year: {paper_metadata.get('year', 'Unknown')}
+Paper: {paper_metadata.get("title", "Unknown")}
+Journal: {paper_metadata.get("journal", "Unknown")}
+Year: {paper_metadata.get("year", "Unknown")}
 Dataset: {dataset_id}
 
 Context excerpts where dataset is mentioned:

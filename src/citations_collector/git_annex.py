@@ -179,7 +179,7 @@ class GitAnnexHelper:
                 import json
 
                 data = json.loads(result.stdout)
-                return data.get("fields", {})
+                return dict(data.get("fields", {}))
 
             return {}
 

@@ -53,7 +53,7 @@ class ContextExtractor:
             import pdfplumber
         except ImportError as e:
             raise ImportError(
-                "pdfplumber required for PDF extraction. " "Install with: pip install pdfplumber"
+                "pdfplumber required for PDF extraction. Install with: pip install pdfplumber"
             ) from e
 
         logger.info(f"Extracting full text from PDF: {pdf_path}")
@@ -95,7 +95,7 @@ class ContextExtractor:
             import pdfplumber
         except ImportError as e:
             raise ImportError(
-                "pdfplumber required for PDF extraction. " "Install with: pip install pdfplumber"
+                "pdfplumber required for PDF extraction. Install with: pip install pdfplumber"
             ) from e
 
         logger.info(f"Extracting contexts from PDF: {pdf_path}")
@@ -362,7 +362,7 @@ class ContextExtractor:
 
         return paragraph
 
-    def _find_section_header(self, element) -> str | None:
+    def _find_section_header(self, element: Any) -> str | None:
         """Find nearest section header before element.
 
         Args:
@@ -374,7 +374,7 @@ class ContextExtractor:
         # Look backwards for h1, h2, h3, h4
         for sibling in element.find_previous_siblings():
             if sibling.name in ["h1", "h2", "h3", "h4"]:
-                return sibling.get_text().strip()
+                return str(sibling.get_text().strip())
         return None
 
     def _is_duplicate_context(
@@ -455,4 +455,4 @@ class ContextExtractor:
             Extracted citations dictionary
         """
         with open(json_path) as f:
-            return json.load(f)
+            return dict(json.load(f))

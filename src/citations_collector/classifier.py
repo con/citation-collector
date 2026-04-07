@@ -36,7 +36,7 @@ class CitationClassifier:
         backend_type: str,
         model: str | None = None,
         confidence_threshold: float = 0.7,
-        **backend_kwargs,
+        **backend_kwargs: Any,
     ) -> CitationClassifier:
         """Create classifier from configuration.
 
@@ -52,7 +52,8 @@ class CitationClassifier:
         if model:
             backend_kwargs["model"] = model
 
-        backend = create_backend(backend_type, **backend_kwargs)
+        # backend_type comes from CLI as str, validated by click.Choice
+        backend = create_backend(backend_type, **backend_kwargs)  # type: ignore[arg-type]
         return cls(backend, confidence_threshold)
 
     def classify_citation(
@@ -95,7 +96,7 @@ class CitationClassifier:
         )
 
         logger.info(
-            f"Classification: {result.relationship_type} " f"(confidence: {result.confidence:.2f})"
+            f"Classification: {result.relationship_type} (confidence: {result.confidence:.2f})"
         )
 
         return result
@@ -130,8 +131,7 @@ class CitationClassifier:
             return []
 
         logger.info(
-            f"Classifying with full text ({len(full_text)} chars) "
-            f"for {len(dataset_ids)} datasets"
+            f"Classifying with full text ({len(full_text)} chars) for {len(dataset_ids)} datasets"
         )
 
         results = []

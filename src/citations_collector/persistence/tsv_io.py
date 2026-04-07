@@ -73,8 +73,8 @@ def load_citations(path: Path) -> list[CitationRecord]:
             if cleaned.get("classification_confidence"):
                 with suppress(ValueError):
                     cleaned["classification_confidence"] = float(
-                        cleaned["classification_confidence"]
-                    )  # type: ignore[arg-type]
+                        cleaned["classification_confidence"]  # type: ignore[arg-type]
+                    )
 
             # Convert classification_reviewed to bool if present
             if cleaned.get("classification_reviewed"):

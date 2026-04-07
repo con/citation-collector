@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+from typing import Any
 
 from .base import ClassificationResult, LLMBackend
 from .prompts import CLASSIFICATION_SYSTEM_PROMPT, build_classification_prompt
@@ -113,7 +114,7 @@ class OpenAIBackend(LLMBackend):
             results.append(result)
         return results
 
-    def _parse_response(self, response, contexts: list[str]) -> ClassificationResult:
+    def _parse_response(self, response: Any, contexts: list[str]) -> ClassificationResult:
         """Parse OpenAI response.
 
         Args:

@@ -5,6 +5,10 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 from pathlib import Path
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from citations_collector.models import CitationRecord
 
 import click
 
@@ -685,7 +689,7 @@ def extract_contexts(
             # Report
             mention_count = sum(len(c["dataset_mentions"]) for c in extracted["citations"])
             click.echo(
-                f"✓ {doi} ({len(extracted['citations'])} datasets, " f"{mention_count} mentions)"
+                f"✓ {doi} ({len(extracted['citations'])} datasets, {mention_count} mentions)"
             )
             extracted_count += 1
 
@@ -863,7 +867,7 @@ def classify(
     if not papers_to_classify:
         if full_text:
             click.echo(
-                "No PDF/HTML files found. " "Run 'citations-collector fetch-pdfs' first.",
+                "No PDF/HTML files found. Run 'citations-collector fetch-pdfs' first.",
                 err=True,
             )
         else:
@@ -880,7 +884,7 @@ def classify(
     classified_count = 0
     low_confidence_count = 0
     error_count = 0
-    updates = []  # (doi, item_id, item_flavor, result, was_reviewed)
+    updates: list[tuple[str, str, str, Any, bool]] = []
 
     for item in papers_to_classify:
         if full_text:
@@ -953,8 +957,7 @@ def classify(
                             click.echo(f"      [{i}] {ctx[:200]}...")
 
                         click.echo(
-                            f"\n    Suggested: {result.relationship_type} "
-                            f"({result.confidence:.2f})"
+                            f"\n    Suggested: {result.relationship_type} ({result.confidence:.2f})"
                         )
                         response = click.prompt(
                             "    Accept/Edit/Skip? (a/e/s)",
@@ -1012,7 +1015,7 @@ def classify(
         # Update citation records
         from citations_collector.models.generated import CitationRelationship
 
-        updated_citations = []
+        updated_citations: list[tuple[str, str, CitationRecord]] = []
         for doi, item_id, item_flavor, result, was_reviewed in updates:
             citation = citation_lookup.get((doi, item_id))
             if citation:
