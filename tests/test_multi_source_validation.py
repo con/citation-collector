@@ -6,7 +6,7 @@ import json
 
 import pytest
 
-from citations_collector.models.generated import CitationRecord
+from citations_collector.models import CitationRecord
 
 
 @pytest.mark.ai_generated
@@ -65,18 +65,18 @@ def test_citation_sources_dates_coherence_missing_in_sources() -> None:
 
 @pytest.mark.ai_generated
 def test_citation_sources_dates_both_empty() -> None:
-    """Verify that empty/None citation_sources and discovered_dates pass validation."""
+    """Verify that citation_sources auto-populates from citation_source when empty."""
     citation = CitationRecord(
         item_id="test:001",
         item_flavor="v1.0",
         citation_relationship="Cites",
         citation_source="crossref",  # Legacy field still required
-        citation_sources=[],  # Empty
+        citation_sources=[],  # Empty - should be auto-populated
         discovered_dates=None,  # None
     )
 
-    # Should not raise
-    assert citation.citation_sources == []
+    # citation_sources should auto-populate from citation_source (backward compat)
+    assert citation.citation_sources == ["crossref"]
     assert citation.discovered_dates is None
 
 

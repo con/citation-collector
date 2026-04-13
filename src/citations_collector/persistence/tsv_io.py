@@ -32,6 +32,10 @@ TSV_COLUMNS = [
     "citation_comment",
     "curated_by",
     "curated_date",
+    "classification_method",
+    "classification_model",
+    "classification_confidence",
+    "classification_reviewed",
     "oa_status",
     "pdf_url",
     "pdf_path",
@@ -64,6 +68,19 @@ def load_citations(path: Path) -> list[CitationRecord]:
             if cleaned.get("citation_year"):
                 with suppress(ValueError):
                     cleaned["citation_year"] = int(cleaned["citation_year"])  # type: ignore[arg-type]
+
+            # Convert classification_confidence to float if present
+            if cleaned.get("classification_confidence"):
+                with suppress(ValueError):
+                    cleaned["classification_confidence"] = float(
+                        cleaned["classification_confidence"]  # type: ignore[arg-type]
+                    )
+
+            # Convert classification_reviewed to bool if present
+            if cleaned.get("classification_reviewed"):
+                # Accept: true/True/1/yes, false/False/0/no/empty
+                val = str(cleaned["classification_reviewed"]).lower()
+                cleaned["classification_reviewed"] = val in ("true", "1", "yes")
 
             # Parse citation_sources from TSV (comma-separated)
             # Support both old "citation_source" and new "citation_sources" columns
@@ -100,7 +117,11 @@ def load_citations(path: Path) -> list[CitationRecord]:
                 # Single relationship - still create list for consistency
                 cleaned["citation_relationships"] = [relationships_field]
                 cleaned["citation_relationship"] = relationships_field
-            # If neither field is present, validator will auto-populate from citation_relationship
+            else:
+                # No relationship field - set default for backward compatibility
+                # Use "Cites" as the generic default when unspecified
+                cleaned["citation_relationship"] = "Cites"
+                cleaned["citation_relationships"] = ["Cites"]
 
             # Create CitationRecord, only including fields that are in the model
             citation = CitationRecord(**cleaned)  # type: ignore[arg-type]
@@ -122,8 +143,8 @@ def save_citations(citations: list[CitationRecord], path: Path) -> None:
         writer.writeheader()
 
         for citation in citations:
-            # Convert to dict
-            data = citation.model_dump(exclude_none=False, mode="python")
+            # Convert to dict (use mode="json" to properly serialize enums)
+            data = citation.model_dump(exclude_none=False, mode="json")
 
             # Serialize citation_sources list to comma-separated string
             if "citation_sources" in data:
@@ -136,10 +157,8 @@ def save_citations(citations: list[CitationRecord], path: Path) -> None:
             # Serialize citation_relationships list to comma-separated string
             if "citation_relationships" in data:
                 if data["citation_relationships"]:
-                    # Convert enum values to strings
-                    data["citation_relationships"] = ", ".join(
-                        str(r) for r in data["citation_relationships"]
-                    )
+                    # mode="json" already converted enums to strings
+                    data["citation_relationships"] = ", ".join(data["citation_relationships"])
                 else:
                     # Empty list -> empty string (not "[]")
                     data["citation_relationships"] = ""

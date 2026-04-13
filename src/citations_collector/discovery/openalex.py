@@ -79,7 +79,7 @@ class OpenAlexDiscoverer(AbstractDiscoverer):
 
         # Query OpenAlex for works that cite this work
         # Filter format: cites:{openalex_id} (e.g., cites:W4409283533)
-        citations = []
+        citations: list[CitationRecord] = []
         cursor = "*"  # OpenAlex uses cursor-based pagination
 
         while cursor:

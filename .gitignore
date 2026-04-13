@@ -19,3 +19,4 @@ cache
 .coverage
 .local
 .claude/settings.local.json
+.claude/CLAUDE.md

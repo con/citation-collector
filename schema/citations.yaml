@@ -240,6 +240,14 @@ enums:
       pending:
         description: Citation needs review by curator.
 
+  ClassificationMethod:
+    description: How the citation relationship was determined.
+    permissible_values:
+      manual:
+        description: Manually classified by a human curator.
+      llm:
+        description: Classified by a Large Language Model.
+
 # =============================================================================
 # Classes
 # =============================================================================
@@ -493,6 +501,39 @@ classes:
       curated_date:
         description: When the curation decision was made (ISO 8601).
         range: date
+
+      # Classification metadata (minimal - full details in per-paper classifications.json)
+      classification_method:
+        description: >-
+          How the citation_relationship was determined.
+          "manual" for human curation, "llm" for LLM classification.
+          Empty/null indicates unspecified (treat as manual).
+        range: ClassificationMethod
+      classification_model:
+        description: >-
+          LLM model identifier if classification_method is "llm".
+          Empty for manual classifications.
+          Examples: "google.gemma-3-27b-it", "anthropic.claude-sonnet-4-5",
+          "qwen2:7b" (Ollama).
+        comments:
+          - Full classification details stored in pdfs/{doi}/classifications.json
+          - This field enables quick filtering without joining to external file.
+      classification_confidence:
+        description: >-
+          Confidence score from LLM classification (0.0-1.0).
+          Empty for manual classifications.
+        range: float
+        minimum_value: 0.0
+        maximum_value: 1.0
+      classification_reviewed:
+        description: >-
+          Has a human reviewed and approved this classification?
+          Use for tracking which LLM classifications need manual verification.
+          Defaults to false for new LLM classifications.
+        range: boolean
+        ifabsent: "false"
+
+      # PDF/OA metadata
       oa_status:
         description: >-
           Open access status from Unpaywall: gold, green, bronze, hybrid,

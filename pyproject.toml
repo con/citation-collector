@@ -42,8 +42,16 @@ test = [
     "pytest-timeout>=2.0",
     "responses>=0.23",
 ]
+llm = [
+    "openai>=1.0.0",  # For OpenAI and Dartmouth backends
+]
+extraction = [
+    "pdfplumber>=0.10.0",  # PDF text extraction
+    "beautifulsoup4>=4.12.0",  # HTML parsing
+    "lxml>=4.9.0",  # Fast HTML parser for BeautifulSoup
+]
 devel = [
-    "citations-collector[test]",
+    "citations-collector[test,llm,extraction]",
     "ruff>=0.1.0",
     "mypy>=1.0",
     "types-requests",

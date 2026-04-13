@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import re
 import sys
 from datetime import (
@@ -26,8 +25,7 @@ from pydantic import (
     SerializationInfo,
     SerializerFunctionWrapHandler,
     field_validator,
-    model_serializer,
-    model_validator,
+    model_serializer
 )
 
 
@@ -303,6 +301,20 @@ class CitationStatus(str, Enum):
     """
 
 
+class ClassificationMethod(str, Enum):
+    """
+    How the citation relationship was determined.
+    """
+    manual = "manual"
+    """
+    Manually classified by a human curator.
+    """
+    llm = "llm"
+    """
+    Classified by a Large Language Model.
+    """
+
+
 
 class ItemRef(ConfiguredBaseModel):
     """
@@ -400,6 +412,14 @@ class CitationRecord(ConfiguredBaseModel):
     citation_comment: Optional[str] = Field(default=None, description="""Curator notes about this citation.""", json_schema_extra = { "linkml_meta": {'domain_of': ['CitationRecord']} })
     curated_by: Optional[str] = Field(default=None, description="""Who made the curation decision.""", json_schema_extra = { "linkml_meta": {'domain_of': ['CitationRecord']} })
     curated_date: Optional[date] = Field(default=None, description="""When the curation decision was made (ISO 8601).""", json_schema_extra = { "linkml_meta": {'domain_of': ['CitationRecord']} })
+    classification_method: Optional[ClassificationMethod] = Field(default=None, description="""How the citation_relationship was determined. \"manual\" for human curation, \"llm\" for LLM classification. Empty/null indicates unspecified (treat as manual).""", json_schema_extra = { "linkml_meta": {'domain_of': ['CitationRecord']} })
+    classification_model: Optional[str] = Field(default=None, description="""LLM model identifier if classification_method is \"llm\". Empty for manual classifications. Examples: \"google.gemma-3-27b-it\", \"anthropic.claude-sonnet-4-5\", \"qwen2:7b\" (Ollama).""", json_schema_extra = { "linkml_meta": {'comments': ['Full classification details stored in '
+                      'pdfs/{doi}/classifications.json',
+                      'This field enables quick filtering without joining to external '
+                      'file.'],
+         'domain_of': ['CitationRecord']} })
+    classification_confidence: Optional[float] = Field(default=None, description="""Confidence score from LLM classification (0.0-1.0). Empty for manual classifications.""", ge=0.0, le=1.0, json_schema_extra = { "linkml_meta": {'domain_of': ['CitationRecord']} })
+    classification_reviewed: Optional[bool] = Field(default=False, description="""Has a human reviewed and approved this classification? Use for tracking which LLM classifications need manual verification. Defaults to false for new LLM classifications.""", json_schema_extra = { "linkml_meta": {'domain_of': ['CitationRecord'], 'ifabsent': 'false'} })
     oa_status: Optional[str] = Field(default=None, description="""Open access status from Unpaywall: gold, green, bronze, hybrid, or closed.""", json_schema_extra = { "linkml_meta": {'domain_of': ['CitationRecord']} })
     pdf_url: Optional[str] = Field(default=None, description="""Best open access PDF URL from Unpaywall.""", json_schema_extra = { "linkml_meta": {'domain_of': ['CitationRecord']} })
     pdf_path: Optional[str] = Field(default=None, description="""Relative path to locally stored PDF file.""", json_schema_extra = { "linkml_meta": {'domain_of': ['CitationRecord']} })
@@ -429,75 +449,6 @@ class CitationRecord(ConfiguredBaseModel):
             err_msg = f"Invalid citation_merged_into format: {v}"
             raise ValueError(err_msg)
         return v
-
-    @model_validator(mode='after')
-    def validate_sources_dates_coherence(self):
-        """Validate that citation_sources and discovered_dates are coherent.
-
-        NOTE: This validator is manually added and must be preserved when
-        regenerating models from schema. LinkML does not yet support
-        cross-field validation rules.
-
-        Validation rules:
-        - If discovered_dates is None/empty: no validation (backward compat)
-        - If discovered_dates is present: must be valid JSON dict matching citation_sources
-        """
-        # Only validate if discovered_dates is actually populated
-        if not self.discovered_dates:
-            return self
-
-        # Parse discovered_dates JSON
-        try:
-            dates_dict = json.loads(self.discovered_dates)
-            if not isinstance(dates_dict, dict):
-                raise ValueError(
-                    f"discovered_dates must be a JSON object, got: {type(dates_dict).__name__}"
-                )
-        except json.JSONDecodeError as e:
-            raise ValueError(f"Invalid JSON in discovered_dates: {e}")
-
-        # Enforce coherence between citation_sources and discovered_dates keys
-        sources_set = set(self.citation_sources or [])
-        dates_keys_set = set(dates_dict.keys())
-
-        missing_in_dates = sources_set - dates_keys_set
-        missing_in_sources = dates_keys_set - sources_set
-
-        errors = []
-        if missing_in_dates:
-            errors.append(f"Sources in citation_sources missing from discovered_dates: {sorted(missing_in_dates)}")
-        if missing_in_sources:
-            errors.append(f"Keys in discovered_dates missing from citation_sources: {sorted(missing_in_sources)}")
-
-        if errors:
-            raise ValueError("citation_sources and discovered_dates must be coherent. " + "; ".join(errors))
-
-        return self
-
-    @model_validator(mode='after')
-    def validate_relationships_coherence(self):
-        """Validate that citation_relationship and citation_relationships are coherent.
-
-        NOTE: This validator is manually added and must be preserved when
-        regenerating models from schema. LinkML does not yet support
-        cross-field validation rules.
-
-        Validation rules:
-        - citation_relationship (singular) must match first element of citation_relationships
-        - If citation_relationships is empty, create from citation_relationship
-        """
-        # Ensure citation_relationships is populated
-        if not self.citation_relationships:
-            # Auto-populate from singular field for backward compat
-            self.citation_relationships = [self.citation_relationship]
-        elif self.citation_relationship != self.citation_relationships[0]:
-            # Enforce coherence: singular must match first element
-            raise ValueError(
-                f"citation_relationship ({self.citation_relationship}) must match "
-                f"first element of citation_relationships ({self.citation_relationships[0]})"
-            )
-
-        return self
 
 
 class SourceConfig(ConfiguredBaseModel):
