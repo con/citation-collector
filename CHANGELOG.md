@@ -1,3 +1,19 @@
+# 0.3.0 (Mon Apr 13 2026)
+
+#### 🚀 Enhancement
+
+- LLM-Based Citation Classification System [#4](https://github.com/con/citations-collector/pull/4) ([@yarikoptic](https://github.com/yarikoptic))
+
+#### ⚠️ Pushed to `master`
+
+- Fix CHANGELOG.md: rename duplicate 0.2.3 entry to 0.2.4 ([@yarikoptic](https://github.com/yarikoptic))
+
+#### Authors: 1
+
+- Yaroslav Halchenko ([@yarikoptic](https://github.com/yarikoptic))
+
+---
+
 # 0.2.4 (Mon Feb 02 2026)
 
 #### 🐛 Bug Fix
