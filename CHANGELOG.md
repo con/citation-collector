@@ -1,3 +1,15 @@
+# 0.3.1 (Thu Jul 09 2026)
+
+#### 🐛 Bug Fix
+
+- Fix: migrate CrossRefDiscoverer to /beta/datacitations (Event Data shut down) [#8](https://github.com/con/citations-collector/pull/8) ([@yarikoptic](https://github.com/yarikoptic))
+
+#### Authors: 1
+
+- Yaroslav Halchenko ([@yarikoptic](https://github.com/yarikoptic))
+
+---
+
 # 0.3.0 (Mon Apr 13 2026)
 
 #### 🚀 Enhancement
