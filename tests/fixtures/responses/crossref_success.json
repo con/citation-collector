@@ -1,26 +1,40 @@
 {
   "status": "ok",
-  "message-type": "event-list",
+  "message-type": "data-citations-list",
   "message": {
     "total-results": 2,
-    "events": [
+    "items-per-page": 1000,
+    "next-page": null,
+    "items": [
       {
-        "id": "event-1",
-        "obj_id": "https://doi.org/10.1234/test.dataset",
-        "subj_id": "https://doi.org/10.1234/citing.paper1",
-        "subj": {
-          "pid": "https://doi.org/10.1234/citing.paper1"
+        "timestamp": "2024-01-15T00:00:00Z",
+        "relation": "references",
+        "subject": {
+          "id": "10.1234/citing.paper1",
+          "type": "journal-article",
+          "member": "1234",
+          "registration-agency": "Crossref"
         },
-        "relation_type_id": "cites"
+        "object": {
+          "id": "10.1234/test.dataset",
+          "type": "dataset",
+          "registration-agency": "DataCite"
+        }
       },
       {
-        "id": "event-2",
-        "obj_id": "https://doi.org/10.1234/test.dataset",
-        "subj_id": "https://doi.org/10.1234/citing.paper2",
-        "subj": {
-          "pid": "https://doi.org/10.1234/citing.paper2"
+        "timestamp": "2023-06-10T00:00:00Z",
+        "relation": "references",
+        "subject": {
+          "id": "10.1234/citing.paper2",
+          "type": "journal-article",
+          "member": "5678",
+          "registration-agency": "Crossref"
         },
-        "relation_type_id": "cites"
+        "object": {
+          "id": "10.1234/test.dataset",
+          "type": "dataset",
+          "registration-agency": "DataCite"
+        }
       }
     ]
   }

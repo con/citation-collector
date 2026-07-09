@@ -26,11 +26,18 @@ def test_discover_command(collections_dir: Path, tmp_path: Path) -> None:
     """Test discover command."""
     collection_file = _copy_fixture(collections_dir, tmp_path)
 
-    # Mock CrossRef Event Data API
+    # Mock CrossRef data-citations API
     responses.add(
         responses.GET,
-        "https://api.eventdata.crossref.org/v1/events",
-        json={"message": {"total-results": 0, "events": []}},
+        "https://api.crossref.org/beta/datacitations",
+        json={
+            "message": {
+                "total-results": 0,
+                "items-per-page": 1000,
+                "next-page": None,
+                "items": [],
+            }
+        },
         status=200,
     )
     # Mock DataCite Events API
@@ -65,11 +72,18 @@ def test_discover_full_refresh_flag(collections_dir: Path, tmp_path: Path) -> No
     """Test discover with --full-refresh flag."""
     collection_file = _copy_fixture(collections_dir, tmp_path)
 
-    # Mock CrossRef Event Data API
+    # Mock CrossRef data-citations API
     responses.add(
         responses.GET,
-        "https://api.eventdata.crossref.org/v1/events",
-        json={"message": {"total-results": 0, "events": []}},
+        "https://api.crossref.org/beta/datacitations",
+        json={
+            "message": {
+                "total-results": 0,
+                "items-per-page": 1000,
+                "next-page": None,
+                "items": [],
+            }
+        },
         status=200,
     )
     # Mock DataCite Events API
@@ -113,8 +127,15 @@ def test_discover_email_env_var(
     with responses.RequestsMock() as rsps:
         rsps.add(
             responses.GET,
-            "https://api.eventdata.crossref.org/v1/events",
-            json={"message": {"total-results": 0, "events": []}},
+            "https://api.crossref.org/beta/datacitations",
+            json={
+                "message": {
+                    "total-results": 0,
+                    "items-per-page": 1000,
+                    "next-page": None,
+                    "items": [],
+                }
+            },
             status=200,
         )
         rsps.add(

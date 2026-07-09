@@ -21,15 +21,15 @@ from citations_collector.models import ItemRef
 @pytest.mark.ai_generated
 @responses.activate
 def test_crossref_success(responses_dir: Path) -> None:
-    """Test successful citation discovery from CrossRef Event Data."""
+    """Test successful citation discovery from the CrossRef data-citations API."""
     # Load mock response
     with open(responses_dir / "crossref_success.json") as f:
         mock_data = json.load(f)
 
-    # Mock CrossRef Event Data API
+    # Mock CrossRef data-citations API
     responses.add(
         responses.GET,
-        "https://api.eventdata.crossref.org/v1/events",
+        "https://api.crossref.org/beta/datacitations",
         json=mock_data,
         status=200,
     )
@@ -77,16 +77,24 @@ def test_crossref_success(responses_dir: Path) -> None:
 @pytest.mark.ai_generated
 @responses.activate
 def test_crossref_empty_results(responses_dir: Path) -> None:
-    """Test CrossRef Event Data with no citations."""
+    """Test CrossRef data-citations API with no citations."""
     # Load mock response
     with open(responses_dir / "crossref_empty.json") as f:
         mock_data = json.load(f)
 
-    # Mock CrossRef Event Data API
+    # Mock CrossRef data-citations API
     responses.add(
         responses.GET,
-        "https://api.eventdata.crossref.org/v1/events",
+        "https://api.crossref.org/beta/datacitations",
         json=mock_data,
+        status=200,
+    )
+
+    # The empty-results fallback also hits the works metadata endpoint
+    responses.add(
+        responses.GET,
+        "https://api.crossref.org/works/10.1234/test.dataset",
+        json={"message": {"is-referenced-by-count": 0}},
         status=200,
     )
 
@@ -108,7 +116,7 @@ def test_crossref_network_error() -> None:
     # Mock network error
     responses.add(
         responses.GET,
-        "https://api.eventdata.crossref.org/v1/events",
+        "https://api.crossref.org/beta/datacitations",
         status=500,
     )
 
@@ -167,15 +175,22 @@ def test_opencitations_discovery(responses_dir: Path) -> None:
 @responses.activate
 def test_incremental_date_filtering() -> None:
     """Test incremental discovery using date filters."""
-    # Mock CrossRef Event Data API with date filter
+    # Mock CrossRef data-citations API with date filter
     responses.add(
         responses.GET,
-        "https://api.eventdata.crossref.org/v1/events",
-        json={"message": {"total-results": 0, "events": []}},
+        "https://api.crossref.org/beta/datacitations",
+        json={
+            "message": {
+                "total-results": 0,
+                "items-per-page": 1000,
+                "next-page": None,
+                "items": [],
+            }
+        },
         status=200,
     )
 
-    # Mock CrossRef Metadata API (called when Event Data returns 0)
+    # Mock CrossRef Metadata API (called when data-citations returns 0)
     responses.add(
         responses.GET,
         "https://api.crossref.org/works/10.1234/test.dataset",
@@ -191,9 +206,11 @@ def test_incremental_date_filtering() -> None:
     since = datetime(2024, 1, 1)
     discoverer.discover(item_ref, since=since)
 
-    # Should have called Event Data API with date filter (from-updated-date for Event Data API)
-    assert len(responses.calls) == 2  # Event Data + Metadata
-    assert "from-updated-date=2024-01-01" in responses.calls[0].request.url
+    # Beta API uses from-created-date (indexing timestamp), not from-updated-date.
+    assert len(responses.calls) == 2  # data-citations + metadata
+    assert "from-created-date=2024-01-01" in responses.calls[0].request.url
+    assert "object-id=" in responses.calls[0].request.url
+    assert "10.1234" in responses.calls[0].request.url
 
 
 @pytest.mark.ai_generated

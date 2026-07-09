@@ -94,7 +94,7 @@ description: "Implementation tasks for citations-collector project"
 - [ ] T039 [P2] Implement AbstractDiscoverer in `src/citations_collector/discovery/base.py`
 - [ ] T040 [P2] Implement CrossRefDiscoverer in `src/citations_collector/discovery/crossref.py`
   - Support email for polite pool (User-Agent header)
-  - Support `since` parameter for incremental (from-index-date filter)
+  - Support `since` parameter for incremental (from-created-date filter on /beta/datacitations)
   - Graceful degradation on 404/network errors (return empty list)
 - [ ] T041 [P2] Implement OpenCitationsDiscoverer in `src/citations_collector/discovery/opencitations.py`
   - Support `since` parameter (filter=date:>YYYY-MM-DD)

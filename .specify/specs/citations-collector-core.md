@@ -212,7 +212,7 @@ As a maintainer, I want a GitHub Actions workflow that periodically updates cita
 
 ### Edge Cases
 
-- CrossRef cited-by requires Polite pool (email in User-Agent) for better rate limits
+- CrossRef data-citations API requires Polite pool (email in User-Agent, plus `mailto` query parameter for the `/beta/datacitations` endpoint) for better rate limits
 - OpenCitations may have delayed indexing (weeks behind CrossRef)
 - Zotero API rate limits: 6 requests/second for single-key auth
 - Large collections: batch API calls, implement progress reporting
@@ -223,9 +223,9 @@ As a maintainer, I want a GitHub Actions workflow that periodically updates cita
 
 APIs support date-based filtering for efficient incremental queries:
 
-- **CrossRef**: `from-index-date` filter with ISO timestamps (second resolution)
-  - Example: `?filter=from-index-date:2024-01-15T00:00:00`
-  - Use `from-index-date` over `from-created-date` for incremental updates
+- **CrossRef** (`/beta/datacitations`): `from-created-date` query parameter (date only, `YYYY-MM-DD`)
+  - Example: `?object-id=<DOI>&from-created-date=2024-01-15`
+  - Filters by ingestion timestamp into CrossRef's data-citations database (~5 day lag from member deposit)
 - **OpenCitations**: `filter=date:>YYYY-MM-DD` parameter
   - Example: `?filter=date:>2024-01-15`
 - **DataCite**: `registered` filter supports date ranges
@@ -241,7 +241,7 @@ The system should:
 ### Functional Requirements
 
 **Citation Discovery:**
-- **FR-001**: System MUST discover papers citing a DOI via CrossRef cited-by API
+- **FR-001**: System MUST discover papers citing a DOI via the CrossRef data-citations API (`api.crossref.org/beta/datacitations`)
 - **FR-002**: System MUST discover papers citing a DOI via OpenCitations (OCI) API
 - **FR-003**: System MUST discover papers citing a DOI via DataCite API
 - **FR-004**: System MUST merge and deduplicate results from multiple sources
@@ -325,8 +325,8 @@ Generated outputs:
 
 **Non-schema classes (implementation):**
 - **CitationDiscoverer**: Queries external APIs for citing papers
-  - Sources: CrossRef (cited-by), OpenCitations (OCI), DataCite, SciCrunch (RRID)
-  - Supports incremental queries via date filters (`from-index-date`, `filter=date:>`)
+  - Sources: CrossRef (data-citations), OpenCitations (OCI), DataCite, OpenAlex, SciCrunch (RRID)
+  - Supports incremental queries via date filters (`from-created-date` on CrossRef, `filter=date:>` on OpenCitations, etc.)
 - **ZoteroSync**: Handles Zotero API interaction via `pyzotero` library
   - Primary: Push discovered citations TO Zotero as nested collections
   - Optional: Import items FROM Zotero collection as source of DOIs to track
