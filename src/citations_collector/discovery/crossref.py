@@ -1,4 +1,10 @@
-"""CrossRef Event Data citation discovery."""
+"""CrossRef data-citations API discovery.
+
+Uses the ``/beta/datacitations`` endpoint on ``api.crossref.org``. This
+replaces the retired ``api.eventdata.crossref.org`` Event Data service,
+which CrossRef permanently shut down on 2026-04-23. See issue #7 and
+https://www.crossref.org/blog/strengthening-support-for-data-citations-and-saying-goodbye-to-event-data/
+"""
 
 from __future__ import annotations
 
@@ -30,14 +36,14 @@ def _sanitize_text(text: str | None) -> str | None:
 
 
 class CrossRefDiscoverer(AbstractDiscoverer):
-    """Discover citations via CrossRef Event Data API."""
+    """Discover citations via the CrossRef data-citations API."""
 
-    BASE_URL = "https://api.eventdata.crossref.org/v1/events"
+    BASE_URL = "https://api.crossref.org/beta/datacitations"
     DOI_API = "https://doi.org"
 
     def __init__(self, email: str | None = None) -> None:
         """
-        Initialize CrossRef Event Data discoverer.
+        Initialize CrossRef data-citations discoverer.
 
         Args:
             email: Email for polite pool (better rate limits)
@@ -60,11 +66,11 @@ class CrossRefDiscoverer(AbstractDiscoverer):
 
     def discover(self, item_ref: ItemRef, since: datetime | None = None) -> list[CitationRecord]:
         """
-        Discover citations from CrossRef Event Data.
+        Discover citations from the CrossRef data-citations API.
 
         Args:
             item_ref: DOI reference to query
-            since: Optional date for incremental updates (from-updated-date filter)
+            since: Optional date for incremental updates (from-created-date filter)
 
         Returns:
             List of citation records
@@ -76,40 +82,34 @@ class CrossRefDiscoverer(AbstractDiscoverer):
         doi = item_ref.ref_value
         logger.debug(f"CrossRef querying for DOI: {doi}")
 
-        # Query CrossRef Event Data for citations
-        # obj-id is the DOI being cited, subj-id is the citing work
-        params: dict[str, Any] = {"obj-id": doi, "rows": 1000}
+        # object-id filters citations whose *object* (cited work) is this DOI;
+        # rows=1000 is the API maximum.
+        params: dict[str, Any] = {"object-id": doi, "rows": 1000}
+        if self.email:
+            params["mailto"] = self.email
 
-        # Add date filter if provided
+        # Beta API takes YYYY-MM-DD for from-created-date (indexing timestamp).
         if since:
-            date_str = since.strftime("%Y-%m-%d")
-            params["from-updated-date"] = date_str
+            params["from-created-date"] = since.strftime("%Y-%m-%d")
 
         try:
-            # Increase timeout to 60s - Event Data API can be slow for some queries
             response = self.session.get(self.BASE_URL, params=params, timeout=60)
             response.raise_for_status()
             data = response.json()
         except requests.Timeout:
-            logger.warning(f"CrossRef Event Data API timeout for {doi} (query took >60s)")
+            logger.warning(f"CrossRef data-citations API timeout for {doi} (query took >60s)")
             return []
         except requests.RequestException as e:
-            logger.warning(f"CrossRef Event Data API error for {doi}: {e}")
+            logger.warning(f"CrossRef data-citations API error for {doi}: {e}")
             return []
 
-        # Parse citations from events
+        # Parse citations from the items array
         citations = []
-        events = data.get("message", {}).get("events", [])
+        items = data.get("message", {}).get("items", [])
 
-        for event in events:
-            # Get the citing DOI
-            subj = event.get("subj", {})
-            citing_doi_url = subj.get("pid", "")
-
-            # Extract DOI from URL (e.g., "https://doi.org/10.1234/abc" -> "10.1234/abc")
-            citing_doi = citing_doi_url.replace("https://doi.org/", "").replace(
-                "http://doi.org/", ""
-            )
+        for item in items:
+            # subject.id is the citing DOI (bare, no URL prefix)
+            citing_doi = item.get("subject", {}).get("id", "")
 
             if not citing_doi or not citing_doi.startswith("10."):
                 continue
@@ -132,11 +132,11 @@ class CrossRefDiscoverer(AbstractDiscoverer):
             )
             citations.append(citation)
 
-        # Warn if Event Data returned events but they didn't yield valid citations
-        if len(events) > 0 and len(citations) == 0:
+        # Warn if the API returned items but none were valid DOI-based citations
+        if len(items) > 0 and len(citations) == 0:
             logger.info(
-                f"CrossRef Event Data returned {len(events)} events for {doi} "
-                f"but none were valid DOI-based citations (may be news/blog references)"
+                f"CrossRef data-citations returned {len(items)} items for {doi} "
+                f"but none had valid subject DOIs"
             )
 
         # Also check metadata API if we got 0 citations total
@@ -149,7 +149,7 @@ class CrossRefDiscoverer(AbstractDiscoverer):
                     if cited_by_count > 0:
                         logger.warning(
                             f"CrossRef metadata shows {cited_by_count} citations for {doi}, "
-                            f"but Event Data API has 0 valid citations. "
+                            f"but data-citations API has 0 valid citations. "
                             f"Full cited-by data requires CrossRef membership: "
                             f"https://www.crossref.org/services/cited-by/"
                         )

@@ -1,8 +1,10 @@
 {
   "status": "ok",
-  "message-type": "event-list",
+  "message-type": "data-citations-list",
   "message": {
     "total-results": 0,
-    "events": []
+    "items-per-page": 1000,
+    "next-page": null,
+    "items": []
   }
 }
